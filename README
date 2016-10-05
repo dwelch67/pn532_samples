@@ -1,0 +1,14 @@
+
+Some examples using the NXP PN532 module for reading MiFare cards (also
+does NFC (smart phone)).
+
+A ready to use board/module plus a few rfid cards can be had for a
+few bucks on ebay from ASIA.  I prefer the uart mode or HSU as the docs
+call it.  The card I am using is square and red there is a blue not
+square rectangular one too.  The red one has dip switches you can
+use to select the mode it comes switched for HSU.  You only need
+the four signals GND, VCC, SDA, SCL.   I just noticed on one side
+of the board it shows those the other it shows GND, VCC, TXD, RXD which
+is the serial the same pin is used for MOSI/SDA/HSU_TX depending on the
+comminication mode.  Likewise the same pin is used for NSS/SCL/HSU_RX.
+

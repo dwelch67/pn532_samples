@@ -1,0 +1,15 @@
+
+See the README in the above directory for more information on
+documentation for this board.
+
+the simple example just reads the id, as if to use as a simple badge
+reader.
+
+complex is an attempt to take advantage of other features.
+
+./simple /dev/ttyXXXX
+
+Hmm, I think you have to run it twice, the second time it works. Sounds
+like a timing or init sequence thing to figure out.
+
+
