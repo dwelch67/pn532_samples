@@ -78,7 +78,7 @@ int new_payload ( unsigned int rx )
     unsigned int rc;
     unsigned int code;
 
-if(0)
+if(1)
 {
     for(ra=0;ra<rx;ra++)
     {
@@ -88,14 +88,14 @@ if(0)
 }
     rc=0;
     if(rx!=12) rc++;
-    if(payload[ 0]!=0xD5) rc++;
-    if(payload[ 1]!=0x4B) rc++;
-    if(payload[ 2]!=0x01) rc++;
-    if(payload[ 3]!=0x01) rc++;
-    if(payload[ 4]!=0x00) rc++;
-    if(payload[ 5]!=0x04) rc++;
-    if(payload[ 6]!=0x08) rc++;
-    if(payload[ 7]!=0x04) rc++;
+    if(payload[ 0]!=0xD5) rc++; 
+    if(payload[ 1]!=0x4B) rc++; //0x4A response
+    if(payload[ 2]!=0x01) rc++; //Number of targets
+    if(payload[ 3]!=0x01) rc++; //target number
+    if(payload[ 4]!=0x00) rc++; //SENS_RES msb
+    if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
+    if(payload[ 6]!=0x08) rc++; //SEL_RES
+    if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
     //if(payload[ 8]!=0x65) rc++;
     //if(payload[ 9]!=0x79) rc++;
     //if(payload[10]!=0xD2) rc++;
@@ -223,13 +223,6 @@ int main ( int argc, char *argv[] )
 
     idno=0;
 
-//InListPassivTarget, to initialise one (several) cards (maximum two cards at the
-//same time)
-//- InDataExchange, to send Mifare commands
-//- InSelect, InDeselect, and InRelease to select, and release the card (this is
-//optional, see paragraph 3.3.7.3 on page 56).
-
-
     if(ser_open(argv[1]))
     {
         printf("ser_open() failed\n");
@@ -243,12 +236,26 @@ int main ( int argc, char *argv[] )
     cdata[ra++]=0x01; //Normal mode SAM not used
     send_command(ra);
 
-    //ra=0;
-    //cdata[ra++]=0xD4;
-    //cdata[ra++]=0x4A;
-    //cdata[ra++]=0x01;
-    //cdata[ra++]=0x00;
-    //send_command(ra);
+    ////WHY?!
+    ra=0;
+    cdata[ra++]=0xD4;
+    cdata[ra++]=0x14; //SAMConfiguration
+    cdata[ra++]=0x01; //Normal mode SAM not used
+    send_command(ra);
+    for(ra=0;ra<10000;ra++)
+    {
+        rb=ser_copystring(rdata);
+        if(rb)
+        {
+            for(ra=0;ra<rb;ra++)
+            {
+                printf("0x%02X\n",rdata[ra]);
+            }
+            ser_dump(rb);
+        }
+    }
+    ////WHY?!
+
     InListPassiveTarget();
     parse_response();
     return(0);
