@@ -4,7 +4,7 @@
 //-----------------------------------------------------------------------------
 
 //MOSI/SDA/HSU_TX
-//NSS/SCL/HSU_RX  
+//NSS/SCL/HSU_RX
 
 
 #include <stdio.h>
@@ -61,7 +61,7 @@ void InListPassiveTarget ( void )
 {
     ra=0;
     cdata[ra++]=0xD4;
-    cdata[ra++]=0x4A; //InListPassiveTarget 
+    cdata[ra++]=0x4A; //InListPassiveTarget
     cdata[ra++]=0x01; //number of targets
     cdata[ra++]=0x00; //106 kbps type A
     send_command(ra);
@@ -88,7 +88,7 @@ if(1)
 }
     rc=0;
     if(rx!=12) rc++;
-    if(payload[ 0]!=0xD5) rc++; 
+    if(payload[ 0]!=0xD5) rc++;
     if(payload[ 1]!=0x4B) rc++; //0x4A response
     if(payload[ 2]!=0x01) rc++; //Number of targets
     if(payload[ 3]!=0x01) rc++; //target number
@@ -247,10 +247,6 @@ int main ( int argc, char *argv[] )
         rb=ser_copystring(rdata);
         if(rb)
         {
-            for(ra=0;ra<rb;ra++)
-            {
-                printf("0x%02X\n",rdata[ra]);
-            }
             ser_dump(rb);
         }
     }

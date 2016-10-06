@@ -4,7 +4,7 @@
 //-----------------------------------------------------------------------------
 
 //MOSI/SDA/HSU_TX
-//NSS/SCL/HSU_RX  
+//NSS/SCL/HSU_RX
 
 
 #include <stdio.h>
@@ -25,7 +25,21 @@ unsigned int bindata[16384>>2];
 //1 x Mifare One S50 White Card
 //1 x Mifare One S50 Key Card
 
-//ISO/IEC 14443 aA  13.56  106mhz 16bit crc
+//ISO/IEC 14443  A  13.56  106mhz 16bit crc
+
+
+unsigned char test_key[9][6]=
+{
+{0XD3,0XF7,0XD3,0XF7,0XD3,0XF7}, //0
+{0XA0,0XA1,0XA2,0XA3,0XA4,0XA5}, //1
+{0XB0,0XB1,0XB2,0XB3,0XB4,0XB5}, //2
+{0X4D,0X3A,0X99,0XC3,0X51,0XDD}, //3
+{0X1A,0X98,0X2C,0X7E,0X45,0X9A}, //4
+{0XAA,0XBB,0XCC,0XDD,0XEE,0XFF}, //5
+{0X00,0X00,0X00,0X00,0X00,0X00}, //6
+{0XAB,0XCD,0XEF,0X12,0X34,0X56}, //7
+{0XFF,0XFF,0XFF,0XFF,0XFF,0XFF}  //8
+};
 
 //-----------------------------------------------------------------------------
 int send_command ( unsigned int len )
@@ -60,7 +74,7 @@ void InListPassiveTarget ( void )
 {
     ra=0;
     cdata[ra++]=0xD4;
-    cdata[ra++]=0x4A; //InListPassiveTarget 
+    cdata[ra++]=0x4A; //InListPassiveTarget
     cdata[ra++]=0x01; //number of targets
     cdata[ra++]=0x00; //106 kbps type A
     send_command(ra);
@@ -207,7 +221,7 @@ int parse_response ( void )
 //int test_payload ( unsigned int rx )
 //{
     //unsigned int ra;
-    
+
     //for(ra=0;ra<rx;ra++)
     //{
         //printf("0x%02X ",payload[ra]);
@@ -310,6 +324,7 @@ int main ( int argc, char *argv[] )
     unsigned int ra,rb,rc,rd;
     unsigned int rx;
     unsigned int binlen;
+    unsigned int block;
     FILE *fp;
 
     if(argc<2)
@@ -318,29 +333,21 @@ int main ( int argc, char *argv[] )
         return(1);
     }
 
-
-
-//InListPassivTarget, to initialise one (several) cards (maximum two cards at the
-//same time)
-//- InDataExchange, to send Mifare commands
-//- InSelect, InDeselect, and InRelease to select, and release the card (this is
-//optional, see paragraph 3.3.7.3 on page 56).
-
-
     if(ser_open(argv[1]))
     {
         printf("ser_open() failed\n");
         return(1);
     }
     printf("port opened\n");
- 
+
     ra=0;
     cdata[ra++]=0xD4;
     cdata[ra++]=0x14; //SAMConfiguration
     cdata[ra++]=0x01; //Normal mode SAM not used
     send_command(ra);
 
-    ////WHY?!
+    //------------------------
+    //WHY!!??
     ra=0;
     cdata[ra++]=0xD4;
     cdata[ra++]=0x14; //SAMConfiguration
@@ -351,14 +358,12 @@ int main ( int argc, char *argv[] )
         rb=ser_copystring(rdata);
         if(rb)
         {
-            for(ra=0;ra<rb;ra++)
-            {
-                printf("0x%02X\n",rdata[ra]);
-            }
+            //for(ra=0;ra<rb;ra++) printf("0x%02X\n",rdata[ra]);
             ser_dump(rb);
         }
     }
-    ////WHY?!
+    //WHY?!
+    //------------------------
 
     //GetFirmwareVersion
     ra=0;
@@ -371,11 +376,11 @@ int main ( int argc, char *argv[] )
         printf("0x%02X ",payload[ra]);
     }
     printf("\n");
-    //0xD5 0x03 0x32 0x01 0x06 0x07
-    //IC 0x32  PN532
-    //Ver 1
-    //Rev 6
-    //Support ISO18092, ISO/IEC 14443 Type B, ISO/IEC 14443 TypeA
+    ////0xD5 0x03 0x32 0x01 0x06 0x07
+    ////IC 0x32  PN532
+    ////Ver 1
+    ////Rev 6
+    ////Support ISO18092, ISO/IEC 14443 Type B, ISO/IEC 14443 TypeA
 
     //GetGeneralStatus
     ra=0;
@@ -388,7 +393,7 @@ int main ( int argc, char *argv[] )
         printf("0x%02X ",payload[ra]);
     }
     printf("\n");
-    //0xD5 0x05 0x00 0x00 0x00 0x80
+    ////0xD5 0x05 0x00 0x00 0x00 0x80
 
 
     InListPassiveTarget();
@@ -399,10 +404,9 @@ int main ( int argc, char *argv[] )
     }
     printf("\n");
 
-
     rc=0;
     if(rx!=12) rc++;
-    if(payload[ 0]!=0xD5) rc++; 
+    if(payload[ 0]!=0xD5) rc++;
     if(payload[ 1]!=0x4B) rc++; //0x4A response
     if(payload[ 2]!=0x01) rc++; //Number of targets
     if(payload[ 3]!=0x01) rc++; //target number
@@ -416,21 +420,16 @@ int main ( int argc, char *argv[] )
         return(1);
     }
 
-    //if you get the key wrong you have to swipe again, as one would
-    //hope.
-
-if(0)
-{
     ra=0;
     cdata[ra++]=0xD4;
     cdata[ra++]=0x40; //InDataExchange
     cdata[ra++]=0x01; //target id
     cdata[ra++]=0x60; //Key A authenticate
-    cdata[ra++]=0x02; //block address
+    cdata[ra++]=0x00; //block address
     cdata[ra++]=0xFF; //key
     cdata[ra++]=0xFF; //key
     cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xAA; //key
+    cdata[ra++]=0xFF; //key
     cdata[ra++]=0xFF; //key
     cdata[ra++]=0xFF; //key
     cdata[ra++]=payload[8];
@@ -445,126 +444,32 @@ if(0)
     }
     printf("\n");
     //0xD5 0x41 0x00
-}
 
-    ra=0;
-    cdata[ra++]=0xD4;
-    cdata[ra++]=0x40; //InDataExchange
-    cdata[ra++]=0x01; //target id
-    cdata[ra++]=0x60; //Key A authenticate
-    cdata[ra++]=0x02; //block address
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=payload[8];
-    cdata[ra++]=payload[9];
-    cdata[ra++]=payload[10];
-    cdata[ra++]=payload[11];
-    send_command(ra);
-    rx=test_response();
-    for(ra=0;ra<rx;ra++)
+    for(block=0;block<4;block++)
     {
-        printf("0x%02X ",payload[ra]);
-    }
-    printf("\n");
-    //0xD5 0x41 0x00 
+        ra=0;
+        cdata[ra++]=0xD4;
+        cdata[ra++]=0x40; //InDataExchange
+        cdata[ra++]=0x01; //target id
+        cdata[ra++]=0x30; //read block a
+        cdata[ra++]=block; //block address
+        send_command(ra);
+        rx=test_response();
 
-    ra=0;
-    cdata[ra++]=0xD4;
-    cdata[ra++]=0x40; //InDataExchange
-    cdata[ra++]=0x01; //target id
-    cdata[ra++]=0x30; //type a authenticate
-    cdata[ra++]=0x02; //block address
-    send_command(ra);
-    rx=test_response();
-    for(ra=0;ra<rx;ra++)
-    {
-        printf("0x%02X ",payload[ra]);
-    }
-    printf("\n");
-
-if(0)
-{
-
-    ra=0;
-    cdata[ra++]=0xD4;
-    cdata[ra++]=0x40; //InDataExchange
-    cdata[ra++]=0x01; //target id
-    cdata[ra++]=0xA0; //write 16 bytes
-    cdata[ra++]=0x02; //block address
-    cdata[ra++]=0x00; 
-    cdata[ra++]=0x11; 
-    cdata[ra++]=0x22; 
-    cdata[ra++]=0x33; 
-
-    cdata[ra++]=0x44; 
-    cdata[ra++]=0x55; 
-    cdata[ra++]=0x66; 
-    cdata[ra++]=0x77; 
-
-    cdata[ra++]=0x88; 
-    cdata[ra++]=0x99; 
-    cdata[ra++]=0xAA; 
-    cdata[ra++]=0xBB; 
-
-    cdata[ra++]=0xCC; 
-    cdata[ra++]=0xDD; 
-    cdata[ra++]=0xEE; 
-    cdata[ra++]=0xFF; 
-    
-    send_command(ra);
-    rx=test_response();
-    for(ra=0;ra<rx;ra++)
-    {
-        printf("0x%02X ",payload[ra]);
-    }
-    printf("\n");
-}
-
-
-    ra=0;
-    cdata[ra++]=0xD4;
-    cdata[ra++]=0x40; //InDataExchange
-    cdata[ra++]=0x01; //target id
-    cdata[ra++]=0x30; //read 16 bytes
-    cdata[ra++]=0x02; //block address
-    send_command(ra);
-    rx=test_response();
-    for(ra=0;ra<rx;ra++)
-    {
-        printf("0x%02X ",payload[ra]);
-    }
-    printf("\n");
-
-
-    {
-        unsigned int block;
-
-        for(block=0;block<256;block++)
+        if(payload[0]==0xD5)
+        if(payload[1]==0x41)
+        if(payload[2]==0x00)
         {
-            printf("block %u\n",block);
-            ra=0;
-            cdata[ra++]=0xD4;
-            cdata[ra++]=0x40; //InDataExchange
-            cdata[ra++]=0x01; //target id
-            cdata[ra++]=0x30; //read 16 bytes
-            cdata[ra++]=block; //block address 
-            send_command(ra);
-            rx=test_response();
+            printf("block 0x%02X ",block);
             for(ra=0;ra<rx;ra++)
             {
                 printf("0x%02X ",payload[ra]);
             }
             printf("\n");
-            if(payload[0]==0xD5)
-            if(payload[1]==0x41)
-            if(payload[2]!=0x00) break;
         }
     }
-    
+
+
     return(0);
 }
 //-----------------------------------------------------------------------------
