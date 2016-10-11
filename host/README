@@ -13,3 +13,27 @@ So cant access sectors other than zero, the four blocks within it
 are all the same, can change two of them, cant change the key.  Have
 a lot to figure out.  Waiting for some Mifare ultralights.
 
+Have some ultralights.  I think they are the basic ultralight not the
+C nor EVI nor nano.  dont respond to auth, get version, read sig, and
+reads past 0x0F.  No surprised, messed up one by writing stuff to
+all the pages.
+
+When doing a read the address is the page number but you get four
+pages of data (16 bytes).  Doing a write you write one page at a time
+(four bytes).
+
+Page 0 SSSS
+Page 1 SSSS
+Page 2 SILL
+Page 3 OOOO
+Page 4-15 user memory
+S = serial
+I = Internal
+L = Lock bytes
+O = OTP memory
+
+Interesting, the memory map shows 9 bytes of serial number, you get 7
+bytes from the InListPassiveTarget which are 7 of those 9.
+
+The lultra.c program was for the ultralight.
+

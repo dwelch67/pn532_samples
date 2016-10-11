@@ -5,7 +5,6 @@
 //MOSI/SDA/HSU_TX
 //NSS/SCL/HSU_RX
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,24 +20,6 @@ unsigned char cdata[512];
 unsigned char payload[512];
 unsigned char rdata[5000];
 unsigned int bindata[16384>>2];
-//1 x Mifare One S50 White Card
-//1 x Mifare One S50 Key Card
-
-//ISO/IEC 14443  A  13.56  106mhz 16bit crc
-
-
-unsigned char test_key[9][6]=
-{
-{0XD3,0XF7,0XD3,0XF7,0XD3,0XF7}, //0
-{0XA0,0XA1,0XA2,0XA3,0XA4,0XA5}, //1
-{0XB0,0XB1,0XB2,0XB3,0XB4,0XB5}, //2
-{0X4D,0X3A,0X99,0XC3,0X51,0XDD}, //3
-{0X1A,0X98,0X2C,0X7E,0X45,0X9A}, //4
-{0XAA,0XBB,0XCC,0XDD,0XEE,0XFF}, //5
-{0X00,0X00,0X00,0X00,0X00,0X00}, //6
-{0XAB,0XCD,0XEF,0X12,0X34,0X56}, //7
-{0XFF,0XFF,0XFF,0XFF,0XFF,0XFF}  //8
-};
 
 //-----------------------------------------------------------------------------
 int send_command ( unsigned int len )
@@ -394,7 +375,6 @@ int main ( int argc, char *argv[] )
     printf("\n");
     ////0xD5 0x05 0x00 0x00 0x00 0x80
 
-
     InListPassiveTarget();
     rx=test_response();
     for(ra=0;ra<rx;ra++)
@@ -403,51 +383,25 @@ int main ( int argc, char *argv[] )
     }
     printf("\n");
 
+    //So I have read if you cant auth, and getversion doesnt work
+    //then it is probably an ultralight, not the C nor EV1.
+    //read_sig doesnt work either, so not a nano this is an ultralight
+
     rc=0;
-    if(rx!=12) rc++;
+    if(rx!=15) rc++;
     if(payload[ 0]!=0xD5) rc++;
     if(payload[ 1]!=0x4B) rc++; //0x4A response
     if(payload[ 2]!=0x01) rc++; //Number of targets
     if(payload[ 3]!=0x01) rc++; //target number
     if(payload[ 4]!=0x00) rc++; //SENS_RES msb
-    if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
-    if(payload[ 6]!=0x08) rc++; //SEL_RES
-    if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
+    if(payload[ 5]!=0x44) rc++; //SENS_RES lsb
+    if(payload[ 6]!=0x00) rc++; //SEL_RES
+    if(payload[ 7]!=0x07) rc++; //NFCIDLength //ultralight are 7 bytes
     if(rc)
     {
         printf("goodbye\n");
         return(1);
     }
-
-    ra=0;
-    cdata[ra++]=0xD4;
-    cdata[ra++]=0x40; //InDataExchange
-    cdata[ra++]=0x01; //target id
-    cdata[ra++]=0x60; //Key A authenticate
-    cdata[ra++]=0x00; //block address
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=payload[8];
-    cdata[ra++]=payload[9];
-    cdata[ra++]=payload[10];
-    cdata[ra++]=payload[11];
-    send_command(ra);
-    rx=test_response();
-    for(ra=0;ra<rx;ra++)
-    {
-        printf("0x%02X ",payload[ra]);
-    }
-    printf("\n");
-    //0xD5 0x41 0x00
-
-
-
-
-
 
     ra=0;
     cdata[ra++]=0xD4;
@@ -463,36 +417,67 @@ int main ( int argc, char *argv[] )
     printf("\n");
 
 
+    ra=0;
+    cdata[ra++]=0xD4;
+    cdata[ra++]=0x40; //InDataExchange
+    cdata[ra++]=0x01; //target id
+    cdata[ra++]=0x3C; //READ_SIG
+    send_command(ra);
+    rx=test_response();
+    for(ra=0;ra<rx;ra++)
+    {
+        printf("0x%02X ",payload[ra]);
+    }
+    printf("\n");
 
+    if(0)
+    {
+        unsigned int block;
+        unsigned int zz;
+        zz=11;
+        for(block=0x04;block<0x10;block++)
+        {
+            ra=0;
+            cdata[ra++]=0xD4;
+            cdata[ra++]=0x40; //InDataExchange
+            cdata[ra++]=0x01; //target id
+            cdata[ra++]=0xA2; //WRITE (one (4 byte) page)
+            cdata[ra++]=block; //address
+            cdata[ra++]=zz; zz++;
+            cdata[ra++]=zz; zz++;
+            cdata[ra++]=zz; zz++;
+            cdata[ra++]=zz; zz++;
+            send_command(ra);
+            rx=test_response();
+            for(ra=0;ra<rx;ra++)
+            {
+                printf("0x%02X ",payload[ra]);
+            }
+            printf("\n");
+            if(block==0) break;
+        }
+    }
 
+    {
+        unsigned int block;
 
-
-
-
-    //for(block=0;block<4;block++)
-    //{
-        //ra=0;
-        //cdata[ra++]=0xD4;
-        //cdata[ra++]=0x40; //InDataExchange
-        //cdata[ra++]=0x01; //target id
-        //cdata[ra++]=0x30; //read block a
-        //cdata[ra++]=block; //block address
-        //send_command(ra);
-        //rx=test_response();
-
-        //if(payload[0]==0xD5)
-        //if(payload[1]==0x41)
-        //if(payload[2]==0x00)
-        //{
-            //printf("block 0x%02X ",block);
-            //for(ra=0;ra<rx;ra++)
-            //{
-                //printf("0x%02X ",payload[ra]);
-            //}
-            //printf("\n");
-        //}
-    //}
-
+        for(block=0x00;block<0x10;block+=4)
+        {
+            ra=0;
+            cdata[ra++]=0xD4;
+            cdata[ra++]=0x40; //InDataExchange
+            cdata[ra++]=0x01; //target id
+            cdata[ra++]=0x30; //READ
+            cdata[ra++]=block; //addr
+            send_command(ra);
+            rx=test_response();
+            for(ra=0;ra<rx;ra++)
+            {
+                printf("0x%02X ",payload[ra]);
+            }
+            printf("\n");
+        }
+    }
 
     return(0);
 }
