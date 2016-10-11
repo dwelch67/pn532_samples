@@ -52,13 +52,17 @@ void ser_close ( void )
 //-----------------------------------------------------------------------------
 void ser_senddata ( unsigned char *s, unsigned short len )
 {
-  write(ser_hand,s,len);
+  unsigned int ret;
+  ret=write(ser_hand,s,len);
+  ret=ret; //unused variable ret
   tcdrain(ser_hand);
 }
 //-----------------------------------------------------------------------------
 void ser_sendstring ( char *s )
 {
-  write(ser_hand,s,strlen(s));
+  unsigned int ret;
+  ret=write(ser_hand,s,strlen(s));
+  ret=ret; //unused variable ret
   tcdrain(ser_hand);
 }
 //-----------------------------------------------------------------------------

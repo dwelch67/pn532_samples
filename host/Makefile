@@ -1,21 +1,23 @@
 
 
-all : simple complex lultra
+all : simple complex lultra usimple
 
 simple : simple.c ser.c ser.h 
-	gcc simple.c ser.c -o simple
+	gcc -Wall -O2 simple.c ser.c -o simple
 
+usimple : usimple.c ser.c ser.h 
+	gcc -Wall -O2 usimple.c ser.c -o usimple
 
 complex : complex.c ser.c ser.h 
-	gcc complex.c ser.c -o complex
-
+	gcc -Wall -O2 complex.c ser.c -o complex
 
 lultra : lultra.c ser.c ser.h 
-	gcc lultra.c ser.c -o lultra
+	gcc -Wall -O2 lultra.c ser.c -o lultra
 
 
 clean :
 	rm -f simple
+	rm -f usimple
 	rm -f complex
 	rm -f lultra
 

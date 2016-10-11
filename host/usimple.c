@@ -1,11 +1,9 @@
 
 //-----------------------------------------------------------------------------
-// Copyright (C) David Welch, 2000-2015
 //-----------------------------------------------------------------------------
 
 //MOSI/SDA/HSU_TX
 //NSS/SCL/HSU_RX
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,11 +20,6 @@ unsigned char cdata[512];
 unsigned char payload[512];
 unsigned char rdata[5000];
 unsigned int bindata[16384>>2];
-//1 x Mifare One S50 White Card
-//1 x Mifare One S50 Key Card
-
-//ISO/IEC 14443 aA  13.56  106mhz 16bit crc
-unsigned int idno;
 
 //-----------------------------------------------------------------------------
 int send_command ( unsigned int len )
@@ -56,7 +49,7 @@ int send_command ( unsigned int len )
     ser_senddata(sdata,ra);
     return(0);
 }
-
+//-----------------------------------------------------------------------------
 void InListPassiveTarget ( void )
 {
     ra=0;
@@ -67,62 +60,18 @@ void InListPassiveTarget ( void )
     send_command(ra);
 }
 
-//-----------------------------------------------------------------------------
-void new_code ( unsigned int code )
+void show_payload ( unsigned int rx )
 {
-    printf("%u: %08X\n",idno++,code);
-}
-//-----------------------------------------------------------------------------
-int new_payload ( unsigned int rx )
-{
-    unsigned int rc;
-    unsigned int code;
+    unsigned int ra;
 
-if(1)
-{
     for(ra=0;ra<rx;ra++)
     {
         printf("0x%02X ",payload[ra]);
     }
     printf("\n");
 }
-    rc=0;
-    if(rx!=12) rc++;
-    if(payload[ 0]!=0xD5) rc++;
-    if(payload[ 1]!=0x4B) rc++; //0x4A response
-    if(payload[ 2]!=0x01) rc++; //Number of targets
-    if(payload[ 3]!=0x01) rc++; //target number
-    if(payload[ 4]!=0x00) rc++; //SENS_RES msb
-    if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
-    if(payload[ 6]!=0x08) rc++; //SEL_RES
-    if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
-    //if(payload[ 8]!=0x65) rc++;
-    //if(payload[ 9]!=0x79) rc++;
-    //if(payload[10]!=0xD2) rc++;
-    //if(payload[11]!=0x65) rc++;
-    code=0;
-    code<<=8; code|=payload[ 8];
-    code<<=8; code|=payload[ 9];
-    code<<=8; code|=payload[10];
-    code<<=8; code|=payload[11];
-    if(rc==0)
-    {
-        new_code(code);
-    }
-    if(rx>1)
-    if(payload[0]==0xD5);
-    if(payload[1]==0x4B);
 
-    ra=0;
-    cdata[ra++]=0xD4;
-    cdata[ra++]=0x44;
-    cdata[ra++]=0x01;
-    send_command(ra);
-    InListPassiveTarget();
-    return(0);
-}
-//-----------------------------------------------------------------------------
-int parse_response ( void )
+unsigned int test_response ( void )
 {
     unsigned int rb;
     unsigned int ra;
@@ -196,8 +145,10 @@ int parse_response ( void )
                         }
                         else
                         {
-                            new_payload(rx);
+                            //test_payload(rx);
                             state=0;
+                            ser_dump(rb);
+                            return(rx);
                         }
                         break;
                     }
@@ -211,15 +162,14 @@ int parse_response ( void )
 //-----------------------------------------------------------------------------
 int main ( int argc, char *argv[] )
 {
-    unsigned int ra,rb;
+    unsigned int ra,rb,rc;
+    unsigned int rx;
 
     if(argc<2)
     {
         printf("progstm /dev/ttyXYZ\n");
         return(1);
     }
-
-    idno=0;
 
     if(ser_open(argv[1]))
     {
@@ -234,7 +184,8 @@ int main ( int argc, char *argv[] )
     cdata[ra++]=0x01; //Normal mode SAM not used
     send_command(ra);
 
-    ////WHY?!
+    //------------------------
+    //WHY!!??
     ra=0;
     cdata[ra++]=0xD4;
     cdata[ra++]=0x14; //SAMConfiguration
@@ -245,16 +196,71 @@ int main ( int argc, char *argv[] )
         rb=ser_copystring(rdata);
         if(rb)
         {
+            //for(ra=0;ra<rb;ra++) printf("0x%02X\n",rdata[ra]);
             ser_dump(rb);
         }
     }
-    ////WHY?!
+    //WHY?!
+    //------------------------
 
-    InListPassiveTarget();
-    parse_response();
+    while(1)
+    {
+        InListPassiveTarget();
+        rx=test_response();
+        //show_payload(rx);
+
+        rc=0;
+        if(rx!=15) rc++;
+        if(payload[ 0]!=0xD5) rc++;
+        if(payload[ 1]!=0x4B) rc++; //0x4A response
+        if(payload[ 2]!=0x01) rc++; //Number of targets
+        if(payload[ 3]!=0x01) rc++; //target number
+        if(payload[ 4]!=0x00) rc++; //SENS_RES msb
+        if(payload[ 5]!=0x44) rc++; //SENS_RES lsb
+        if(payload[ 6]!=0x00) rc++; //SEL_RES
+        if(payload[ 7]!=0x07) rc++; //NFCIDLength //ultralight are 7 bytes
+        if(rc==0)
+        {
+            for(ra=0;ra<7;ra++)
+            {
+                printf("%02X",payload[ra+8]);
+            }
+            printf(" : ");
+            ra=0;
+            cdata[ra++]=0xD4;
+            cdata[ra++]=0x40; //InDataExchange
+            cdata[ra++]=0x01; //target id
+            cdata[ra++]=0x30; //READ
+            cdata[ra++]=0x00; //addr
+            send_command(ra);
+            rx=test_response();
+            //show_payload(rx);
+            if(payload[0]==0xD5)
+            if(payload[1]==0x41)
+            if(payload[2]==0x00)
+            {
+                for(ra=0;ra<9;ra++)
+                {
+                    printf("%02X",payload[ra+3]);
+                }
+                printf("\n");
+            }
+        }
+        else
+        {
+            show_payload(rx);
+        }
+        ra=0;
+        cdata[ra++]=0xD4;
+        cdata[ra++]=0x44; //InRelease
+        cdata[ra++]=0x00; //target id
+        send_command(ra);
+        rx=test_response();
+        //show_payload(rx);
+    }
+
     return(0);
 }
 //-----------------------------------------------------------------------------
-// Copyright (C) David Welch, 2000-2015
 //-----------------------------------------------------------------------------
 
