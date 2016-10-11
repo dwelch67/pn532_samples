@@ -210,45 +210,66 @@ int main ( int argc, char *argv[] )
         //show_payload(rx);
 
         rc=0;
-        if(rx!=15) rc++;
+        if(rx!=12) rc++;
         if(payload[ 0]!=0xD5) rc++;
         if(payload[ 1]!=0x4B) rc++; //0x4A response
         if(payload[ 2]!=0x01) rc++; //Number of targets
         if(payload[ 3]!=0x01) rc++; //target number
         if(payload[ 4]!=0x00) rc++; //SENS_RES msb
-        if(payload[ 5]!=0x44) rc++; //SENS_RES lsb
-        if(payload[ 6]!=0x00) rc++; //SEL_RES
-        if(payload[ 7]!=0x07) rc++; //NFCIDLength //ultralight are 7 bytes
+        if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
+        if(payload[ 6]!=0x08) rc++; //SEL_RES
+        if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
         if(rc==0)
         {
-            for(ra=0;ra<7;ra++)
+            for(ra=0;ra<4;ra++)
             {
                 printf("%02X",payload[ra+8]);
             }
-            printf(" : ");
-            ra=0;
-            cdata[ra++]=0xD4;
-            cdata[ra++]=0x40; //InDataExchange
-            cdata[ra++]=0x01; //target id
-            cdata[ra++]=0x30; //READ
-            cdata[ra++]=0x00; //addr
-            send_command(ra);
-            rx=test_response();
-            //show_payload(rx);
-            if(payload[0]==0xD5)
-            if(payload[1]==0x41)
-            if(payload[2]==0x00)
-            {
-                for(ra=0;ra<9;ra++)
-                {
-                    printf("%02X",payload[ra+3]);
-                }
-                printf("\n");
-            }
+            printf("\n");
         }
         else
         {
-            show_payload(rx);
+            rc=0;
+            if(rx!=15) rc++;
+            if(payload[ 0]!=0xD5) rc++;
+            if(payload[ 1]!=0x4B) rc++; //0x4A response
+            if(payload[ 2]!=0x01) rc++; //Number of targets
+            if(payload[ 3]!=0x01) rc++; //target number
+            if(payload[ 4]!=0x00) rc++; //SENS_RES msb
+            if(payload[ 5]!=0x44) rc++; //SENS_RES lsb
+            if(payload[ 6]!=0x00) rc++; //SEL_RES
+            if(payload[ 7]!=0x07) rc++; //NFCIDLength //ultralight are 7 bytes
+            if(rc==0)
+            {
+                for(ra=0;ra<7;ra++)
+                {
+                    printf("%02X",payload[ra+8]);
+                }
+                printf(" : ");
+                ra=0;
+                cdata[ra++]=0xD4;
+                cdata[ra++]=0x40; //InDataExchange
+                cdata[ra++]=0x01; //target id
+                cdata[ra++]=0x30; //READ
+                cdata[ra++]=0x00; //addr
+                send_command(ra);
+                rx=test_response();
+                //show_payload(rx);
+                if(payload[0]==0xD5)
+                if(payload[1]==0x41)
+                if(payload[2]==0x00)
+                {
+                    for(ra=0;ra<9;ra++)
+                    {
+                        printf("%02X",payload[ra+3]);
+                    }
+                    printf("\n");
+                }
+            }
+            else
+            {
+                show_payload(rx);
+            }
         }
         ra=0;
         cdata[ra++]=0xD4;

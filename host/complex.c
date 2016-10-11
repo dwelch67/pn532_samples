@@ -182,7 +182,7 @@ unsigned int test_response ( void )
 //-----------------------------------------------------------------------------
 int main ( int argc, char *argv[] )
 {
-    unsigned int ra,rb,rc;
+    unsigned int ra,rb;
     unsigned int rx;
 
     if(argc<2)
@@ -250,53 +250,58 @@ int main ( int argc, char *argv[] )
     rx=test_response();
     show_payload(rx);
 
-    rc=0;
-    if(rx!=12) rc++;
-    if(payload[ 0]!=0xD5) rc++;
-    if(payload[ 1]!=0x4B) rc++; //0x4A response
-    if(payload[ 2]!=0x01) rc++; //Number of targets
-    if(payload[ 3]!=0x01) rc++; //target number
-    if(payload[ 4]!=0x00) rc++; //SENS_RES msb
-    if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
-    if(payload[ 6]!=0x08) rc++; //SEL_RES
-    if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
-    if(rc)
-    {
-        printf("goodbye\n");
-        return(1);
-    }
+    //rc=0;
+    //if(rx!=12) rc++;
+    //if(payload[ 0]!=0xD5) rc++;
+    //if(payload[ 1]!=0x4B) rc++; //0x4A response
+    //if(payload[ 2]!=0x01) rc++; //Number of targets
+    //if(payload[ 3]!=0x01) rc++; //target number
+    //if(payload[ 4]!=0x00) rc++; //SENS_RES msb
+    //if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
+    //if(payload[ 6]!=0x08) rc++; //SEL_RES
+    //if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
+    //if(rc)
+    //{
+        //printf("goodbye\n");
+        //return(1);
+    //}
 
-    ra=0;
-    cdata[ra++]=0xD4;
-    cdata[ra++]=0x40; //InDataExchange
-    cdata[ra++]=0x01; //target id
-    cdata[ra++]=0x60; //Key A authenticate
-    cdata[ra++]=0x00; //block address
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=0xFF; //key
-    cdata[ra++]=payload[8];
-    cdata[ra++]=payload[9];
-    cdata[ra++]=payload[10];
-    cdata[ra++]=payload[11];
-    send_command(ra);
-    rx=test_response();
-    show_payload(rx);
-    //0xD5 0x41 0x00
-
-
-
-
-
+    //ra=0;
+    //cdata[ra++]=0xD4;
+    //cdata[ra++]=0x40; //InDataExchange
+    //cdata[ra++]=0x01; //target id
+    //cdata[ra++]=0x60; //Key A authenticate
+    //cdata[ra++]=0x00; //block address
+    //cdata[ra++]=0xFF; //key
+    //cdata[ra++]=0xFF; //key
+    //cdata[ra++]=0xFF; //key
+    //cdata[ra++]=0xFF; //key
+    //cdata[ra++]=0xFF; //key
+    //cdata[ra++]=0xFF; //key
+    //cdata[ra++]=payload[8];
+    //cdata[ra++]=payload[9];
+    //cdata[ra++]=payload[10];
+    //cdata[ra++]=payload[11];
+    //send_command(ra);
+    //rx=test_response();
+    //show_payload(rx);
+    ////0xD5 0x41 0x00
 
     ra=0;
     cdata[ra++]=0xD4;
     cdata[ra++]=0x40; //InDataExchange
     cdata[ra++]=0x01; //target id
     cdata[ra++]=0x60; //GET_VERSION
+    send_command(ra);
+    rx=test_response();
+    show_payload(rx);
+
+    ra=0;
+    cdata[ra++]=0xD4;
+    cdata[ra++]=0x40; //InDataExchange
+    cdata[ra++]=0x01; //target id
+    cdata[ra++]=0x30; //read block a
+    cdata[ra++]=0; //block address
     send_command(ra);
     rx=test_response();
     show_payload(rx);
