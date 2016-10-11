@@ -179,6 +179,130 @@ unsigned int test_response ( void )
         }
     }
 }
+unsigned int dokey ( void )
+{
+    //hmmm this should take 1000 to 2000 years to complete if my
+    //math is right.  Wait maybe it is over 700,000 years to complete.
+    unsigned int ra;
+    unsigned int rc;
+    unsigned int rx;
+    unsigned int keytest[6];
+
+    keytest[0]=0x00;
+    keytest[1]=0x00;
+    keytest[2]=0x00;
+    keytest[3]=0x00;
+    keytest[4]=0x00;
+    keytest[5]=0x00;
+
+    while(1)
+    {
+        InListPassiveTarget();
+        rx=test_response();
+        //show_payload(rx);
+
+        rc=0;
+        if(rx!=12) rc++;
+        if(payload[ 0]!=0xD5) rc++;
+        if(payload[ 1]!=0x4B) rc++; //0x4A response
+        if(payload[ 2]!=0x01) rc++; //Number of targets
+        if(payload[ 3]!=0x01) rc++; //target number
+        if(payload[ 4]!=0x00) rc++; //SENS_RES msb
+        if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
+        if(payload[ 6]!=0x08) rc++; //SEL_RES
+        if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
+        if(rc)
+        {
+            show_payload(rx);
+            printf("goodbye\n");
+            return(1);
+        }
+        for(ra=0;ra<6;ra++) printf("%02X",keytest[ra]); printf("\n");
+
+        ra=0;
+        cdata[ra++]=0xD4;
+        cdata[ra++]=0x40; //InDataExchange
+        cdata[ra++]=0x01; //target id
+        cdata[ra++]=0x60; //Key A authenticate
+        cdata[ra++]=0x00; //block address
+        cdata[ra++]=keytest[0];
+        cdata[ra++]=keytest[1];
+        cdata[ra++]=keytest[2];
+        cdata[ra++]=keytest[3];
+        cdata[ra++]=keytest[4];
+        cdata[ra++]=keytest[5];
+        cdata[ra++]=payload[8];
+        cdata[ra++]=payload[9];
+        cdata[ra++]=payload[10];
+        cdata[ra++]=payload[11];
+        send_command(ra);
+        rx=test_response();
+        //show_payload(rx);
+        //0xD5 0x41 0x00
+
+        if(payload[0]==0xD5)
+        if(payload[1]==0x41)
+        if(payload[2]==0x14)
+        {
+
+            keytest[5]++;
+            if(keytest[5]>0xFF)
+            {
+                keytest[5]=0;
+                keytest[4]++;
+            }
+            if(keytest[4]>0xFF)
+            {
+                keytest[4]=0;
+                keytest[3]++;
+            }
+            if(keytest[3]>0xFF)
+            {
+                keytest[3]=0;
+                keytest[2]++;
+            }
+            if(keytest[2]>0xFF)
+            {
+                keytest[2]=0;
+                keytest[1]++;
+            }
+            if(keytest[1]>0xFF)
+            {
+                keytest[1]=0;
+                keytest[0]++;
+            }
+            if(keytest[0]>0xFF)
+            {
+                printf("tried them all!\n");
+                return(1);
+            }
+            ra=0;
+            cdata[ra++]=0xD4;
+            cdata[ra++]=0x44; //InRelease
+            cdata[ra++]=0x00; //target id
+            send_command(ra);
+            rx=test_response();
+            //show_payload(rx);
+            continue;
+        }
+        if(payload[0]==0xD5)
+        if(payload[1]==0x41)
+        if(payload[2]==0x00)
+        {
+            printf("GOT IT!!!\n");
+            for(ra=0;ra<6;ra++)
+            {
+                printf("key[%u]=0x%02X\n",ra,keytest[ra]);
+            }
+            printf("\n");
+            break;
+        }
+        show_payload(rx);
+        return(1);
+    }
+
+    return(0);
+}
 //-----------------------------------------------------------------------------
 int main ( int argc, char *argv[] )
 {
@@ -245,26 +369,7 @@ int main ( int argc, char *argv[] )
     show_payload(rx);
     ////0xD5 0x05 0x00 0x00 0x00 0x80
 
-
-    InListPassiveTarget();
-    rx=test_response();
-    show_payload(rx);
-
-    //rc=0;
-    //if(rx!=12) rc++;
-    //if(payload[ 0]!=0xD5) rc++;
-    //if(payload[ 1]!=0x4B) rc++; //0x4A response
-    //if(payload[ 2]!=0x01) rc++; //Number of targets
-    //if(payload[ 3]!=0x01) rc++; //target number
-    //if(payload[ 4]!=0x00) rc++; //SENS_RES msb
-    //if(payload[ 5]!=0x04) rc++; //SENS_RES lsb
-    //if(payload[ 6]!=0x08) rc++; //SEL_RES
-    //if(payload[ 7]!=0x04) rc++; //NFCIDLength //ultralight are 7 bytes
-    //if(rc)
-    //{
-        //printf("goodbye\n");
-        //return(1);
-    //}
+    //if(dokey()) return(1);
 
     //ra=0;
     //cdata[ra++]=0xD4;
